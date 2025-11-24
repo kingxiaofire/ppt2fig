@@ -94,6 +94,7 @@ def main():
     defalut_path_map = {} # 对于 每个ppt文件，他的默认导出路径是不同的
     
     # 裁剪参数设置
+    no_crop = tk.BooleanVar(value=False)  # 是否不裁剪
     margin_size = tk.DoubleVar(value=0.0)  # 白边大小，单位为bp (big points)
     percent_retain = tk.DoubleVar(value=0.0)  # 保留原始边距的百分比
     use_uniform = tk.BooleanVar(value=True)  # 是否统一裁剪
@@ -133,39 +134,43 @@ def main():
                 success = current_slide_2_pdf_mac(pdf_file_name)
                 
             if success:
-                tmp_pdf_file_name = pdf_file_name + '.crop'
-                
-                # 构建 pdfCropMargins 参数
-                crop_args = []
-                
-                # 百分比保留参数
-                percent = percent_retain.get()
-                crop_args.extend(["-p", str(percent)])
-                
-                # 绝对偏移量（白边）
-                margin = margin_size.get()
-                if margin > 0:
-                    crop_args.extend(["-a", str(-margin)])
-                
-                # 统一裁剪选项
-                if use_uniform.get():
-                    crop_args.append("-u")
-                
-                # 统一页面大小选项
-                if use_same_size.get():
-                    crop_args.append("-s")
-                
-                # 阈值设置
-                thresh = threshold.get()
-                if thresh != 191:  # 只有非默认值时才添加
-                    crop_args.extend(["-t", str(thresh)])
-                
-                # 输入输出文件
-                crop_args.extend([pdf_file_name, "-o", tmp_pdf_file_name])
-                
-                # 执行裁剪
-                crop(crop_args)
-                shutil.move(tmp_pdf_file_name, pdf_file_name)
+                # 如果选择不裁剪，直接完成
+                if no_crop.get():
+                    tk.messagebox.showinfo("成功", f"PDF已导出至：\n{pdf_file_name}")
+                else:
+                    tmp_pdf_file_name = pdf_file_name + '.crop'
+                    
+                    # 构建 pdfCropMargins 参数
+                    crop_args = []
+                    
+                    # 百分比保留参数
+                    percent = percent_retain.get()
+                    crop_args.extend(["-p", str(percent)])
+                    
+                    # 绝对偏移量（白边）
+                    margin = margin_size.get()
+                    if margin > 0:
+                        crop_args.extend(["-a", str(-margin)])
+                    
+                    # 统一裁剪选项
+                    if use_uniform.get():
+                        crop_args.append("-u")
+                    
+                    # 统一页面大小选项
+                    if use_same_size.get():
+                        crop_args.append("-s")
+                    
+                    # 阈值设置
+                    thresh = threshold.get()
+                    if thresh != 191:  # 只有非默认值时才添加
+                        crop_args.extend(["-t", str(thresh)])
+                    
+                    # 输入输出文件
+                    crop_args.extend([pdf_file_name, "-o", tmp_pdf_file_name])
+                    
+                    # 执行裁剪
+                    crop(crop_args)
+                    shutil.move(tmp_pdf_file_name, pdf_file_name)
             else:
                 tk.messagebox.showerror("错误", "转换失败")
         except Exception as e:
@@ -275,6 +280,9 @@ def main():
     # 选项设置
     options_frame = tk.Frame(params_frame)
     options_frame.pack(fill=tk.X, pady=2)
+    
+    no_crop_check = tk.Checkbutton(options_frame, text="不裁剪", variable=no_crop, font=("Arial", 8))
+    no_crop_check.pack(side=tk.LEFT, padx=5)
     
     uniform_check = tk.Checkbutton(options_frame, text="统一裁剪", variable=use_uniform, font=("Arial", 8))
     uniform_check.pack(side=tk.LEFT, padx=5)
